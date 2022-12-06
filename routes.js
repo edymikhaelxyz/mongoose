@@ -3,20 +3,29 @@ const router = express.Router()
 const Model = require('./model');
 //Post Method
 router.post('/tasks', async (req, res) => {
-    const dask = new Model({
-        title: req.body.title,
-        is_completed: req.body.is_completed
-    })
+    let input = {tasks:[]}
     if(req.body.tasks){
         let resIds = []
-        let input = []
-        req.body.tasks.map(task =>{
-            task.id = dask._id
-            resIds.push({id: task.id})
-            input.push(task)
+        req.body["tasks"].map(async(task) =>{
+            const dask = new Model({
+                title: task.title,
+                is_completed: task.is_completed
+            })
+            task.id = dask.id
+            resIds.push({"id": task.id})
+            try{
+                await dask.save()
+                res.status(201).json(resIds)
+            }
+            catch(error){
+                return
+            }
         })
-        res.status(201).json({tasks: resIds})
     }else{
+        const dask = new Model({
+            title: req.body.title,
+            is_completed: req.body.is_completed
+        })
         if (!req.body.title) {
             res.status(400).json({message: 'Please provide the title'});
             return false;
@@ -75,7 +84,7 @@ router.put('/tasks/:id', async (req, res) => {
         if(!result){
             res.status(404).json({error: "There is no task at that id"})
         }else{
-            res.sendStatus(204)
+            res.status(204).json("None")
         }
     }
     catch (error) {
@@ -84,14 +93,28 @@ router.put('/tasks/:id', async (req, res) => {
 })
 
 //Delete by ID Method
+router.delete('/tasks', async (req, res) => {
+    try {
+        const id = []
+        const body = req.body
+        for(i in body.tasks) id.push(body.tasks[i].id)
+        await Model.deleteMany({_id:{$in:id}})
+        res.status(204).send("None")
+    }
+    catch (error) {
+        res.status(204).send("None")
+    }
+})
+
+
 router.delete('/tasks/:id', async (req, res) => {
     try {
         const id = req.params.id;
         const tasks = await Model.findByIdAndDelete(id);
-        res.sendStatus(204)
+        res.status(204).send("None")
     }
     catch (error) {
-        res.sendStatus(204)
+        res.status(204).send("None")
     }
 })
 
