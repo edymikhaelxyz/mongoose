@@ -3,22 +3,34 @@ const router = express.Router()
 const Model = require('./model');
 //Post Method
 router.post('/tasks', async (req, res) => {
-    const tasks = new Model({
+    const dask = new Model({
         title: req.body.title,
         is_completed: req.body.is_completed
     })
+    if(req.body.tasks){
+        let resIds = []
+        let input = []
+        req.body.tasks.map(task =>{
+            task.id = dask._id
+            resIds.push({id: task.id})
+            input.push(task)
+        })
+        res.status(201).json({tasks: resIds})
+    }else{
+        if (!req.body.title) {
+            res.status(400).json({message: 'Please provide the title'});
+            return false;
+        }else
+        try {   
+            await dask.save();
+            res.status(201).json({id:dask._id})
+        } catch (error) {
+            // console.log(error);
+            res.status(400).json({message: error.message});
+        }
+    }
+
     
-    if (!req.body.title) {
-        res.status(400).json({message: 'Please provide the title'});
-        return false;
-    }
-    try {   
-        await tasks .save();
-        res.status(201).json({id:tasks._id})
-    } catch (error) {
-        // console.log(error);
-        res.status(400).json({message: error.message});
-    }
 }   
 )
 
